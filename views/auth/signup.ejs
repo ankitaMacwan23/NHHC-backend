@@ -1,0 +1,45 @@
+<%- include('../partials/head') %>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <!-- Main Container -->
+  <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    
+    <!-- Page Title -->
+    <h2 class="text-3xl font-semibold text-center text-green-600 mb-6">Login to Your Account</h2>
+    
+    <!-- Login Form -->
+    <form action="/auth/login" method="POST" class="space-y-4">
+      
+      <!-- Email Input -->
+      <div>
+        <label for="email" class="block text-gray-700 font-medium">Email</label>
+        <input type="email" id="email" name="email" required
+          class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+
+      <!-- Password Input -->
+      <div>
+        <label for="password" class="block text-gray-700 font-medium">Password</label>
+        <input type="password" id="password" name="password" required
+          class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+
+      <!-- Login Button -->
+      <button type="submit"
+        class="w-full bg-green-500 text-white py-3 rounded-lg font-semibold shadow-md hover:bg-green-600 transition">
+        Login
+      </button>
+      
+      <!-- Forgot Password & Signup -->
+      <div class="text-center mt-4">
+        <a href="/forgot-password" class="text-blue-500 hover:underline">Forgot Password?</a> |
+        <a href="/signup" class="text-blue-500 hover:underline">Create an Account</a>
+      </div>
+    
+    </form>
+  
+  </div>
+
+</body>
+</html>

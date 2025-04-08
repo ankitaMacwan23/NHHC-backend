@@ -1,0 +1,119 @@
+<%- include('../partials/head') %>
+</head>
+<body class="bg-gray-100">
+  <%- include('../partials/nav') %>
+
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 py-10">
+    <h1 class="text-4xl font-bold text-blue-600 text-center mb-8"><%= editing ? 'Edit' : 'Add' %> Caregiver</h1>
+    
+    <form action="/caregiver/<%= editing ? 'edit-caregiver' : 'add-caregiver' %>" 
+          method="POST" enctype="multipart/form-data" 
+          class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+
+      <input type="hidden" name="caregiver_id" value="<%= editing ? caregiver.id : '' %>">
+        <div class="grid grid-cols-1 gap-6">
+          <% if (errors.length > 0) { %>
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md">
+              <ul class="list-disc pl-5">
+                <% errors.forEach(error => { %>
+                  <li class="text-sm font-medium"><%= error %></li>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Role Selection -->
+        <div>
+          <label for="caregiver_role" class="text-gray-700 font-medium">Role:</label>
+          <select id="caregiver_role" name="caregiver_role"  
+            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+            <option value="" disabled>Select Role</option>
+            <option value="Nurse" <%= (oldInput && oldInput.caregiver_role === 'Nurse') || (editing && caregiver.role === 'Nurse') ? 'selected' : '' %>>Nurse</option>
+            <option value="Doctor" <%= (oldInput && oldInput.caregiver_role === 'Doctor') || (editing && caregiver.role === 'Doctor') ? 'selected' : '' %>>Doctor</option>
+            <option value="Physio" <%= (oldInput && oldInput.caregiver_role === 'Physio') || (editing && caregiver.role === 'Physio') ? 'selected' : '' %>>Physio</option>
+            <option value="Cleaner" <%= (oldInput && oldInput.caregiver_role === 'Cleaner') || (editing && caregiver.role === 'Cleaner') ? 'selected' : '' %>>Cleaner</option>
+          </select>
+        </div>
+
+       <!-- Name -->
+        <div>
+          <label for="caregiver_name" class="text-gray-700 font-medium">Name:</label>
+          <input type="text" id="caregiver_name" name="caregiver_name"  
+            value="<%= oldInput && oldInput.caregiver_name ? oldInput.caregiver_name : (editing ? caregiver.name : '') %>"
+            placeholder="Enter full name" required
+            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Gender Selection -->
+        <div>
+          <label for="caregiver_gender" class="text-gray-700 font-medium">Gender:</label>
+          <select id="caregiver_gender" name="caregiver_gender"  
+            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+            <option value="" disabled>Select Gender</option>
+            <option value="Male" <%= (oldInput && oldInput.caregiver_gender === 'Male') || (editing && caregiver.gender === 'Male') ? 'selected' : '' %>>Male</option>
+            <option value="Female" <%= (oldInput && oldInput.caregiver_gender === 'Female') || (editing && caregiver.gender === 'Female') ? 'selected' : '' %>>Female</option>
+            <option value="Other" <%= (oldInput && oldInput.caregiver_gender === 'Other') || (editing && caregiver.gender === 'Other') ? 'selected' : '' %>>Other</option>
+          </select>
+        </div>
+
+        <!-- Date of Birth -->
+        <div>
+          <label for="caregiver_dob" class="text-gray-700 font-medium">Date of Birth:</label>
+          <input type="date" id="caregiver_dob" name="caregiver_dob"  required
+            value="<%= oldInput && oldInput.caregiver_dob ? oldInput.caregiver_dob : (editing ? caregiver.dob : '') %>"
+            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Contact Number -->
+        <div>
+          <label for="caregiver_contact" class="text-gray-700 font-medium">Contact Number:</label>
+          <input type="number" id="caregiver_contact" name="caregiver_contact" pattern="[0-9]{10}" 
+            value="<%= oldInput && oldInput.caregiver_contact ? oldInput.caregiver_contact : (editing ? caregiver.contact : '') %>"
+            placeholder="Enter 10-digit phone number" required
+            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Email ID -->
+        <div>
+          <label for="caregiver_email" class="text-gray-700 font-medium">Email ID:</label>
+          <input type="email" id="caregiver_email" name="caregiver_email"  
+            value="<%= oldInput && oldInput.caregiver_email ? oldInput.caregiver_email : (editing ? caregiver.email : '') %>"
+            placeholder="Enter email address" required
+            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Adhar Document Upload -->
+        <div>
+          <label for="caregiver_aadhar" class="text-gray-700 font-medium">Upload Your Adhar Card:</label>
+          <input type="file" id="caregiver_aadhar" name="caregiver_aadhar" accept=".pdf,.doc,.docx,.jpg,.png"  required
+            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Document Upload -->
+        <div>
+          <label for="caregiver_document" class="text-gray-700 font-medium">Upload Document:</label>
+          <input type="file" id="caregiver_document" name="caregiver_document" accept=".pdf,.doc,.docx,.jpg,.png" required 
+            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Address -->
+        <div>
+          <label for="caregiver_address" class="text-gray-700 font-medium">Address:</label>
+          <textarea id="caregiver_address" name="caregiver_address"  
+            placeholder="Enter full address" required
+            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500"><%= oldInput && oldInput.caregiver_address ? oldInput.caregiver_address : (editing ? caregiver.address : '') %></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" 
+          class="bg-blue-600 text-white py-3 px-6 rounded-md font-semibold hover:bg-blue-700 transition duration-300">
+          <%= editing ? 'UPDATE' : 'ADD' %> CAREGIVER
+        </button>
+
+      </div>
+    </form>
+  </div>
+</body>
+</html>

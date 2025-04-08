@@ -1,0 +1,79 @@
+<%- include('../partials/head') %>
+</head>
+<body class="bg-gray-100">
+  <%- include('../partials/nav') %>
+   <!-- Main Content -->
+   <div class="container mx-auto px-4 py-10">
+    <h1 class="text-4xl font-bold text-blue-600 text-center mb-8"><%= editing ? 'Edit' : 'Add' %> Your Patient</h1>
+    
+    <form action="/patient/<%= editing ? 'edit-patient' : 'add-patient' %>" method="POST" enctype="multipart/form-data" class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+      <input type="text" name="id" hidden value="<%= editing ? patient.id : ''%>">
+      <div class="grid grid-cols-1 gap-6">
+        <div>
+          <label for="patientName" class="text-gray-700 font-medium">Name:</label>
+          <input type="text" id="patientName" name="patientName" 
+          value="<%= editing ? patient.patientName : '' %>"
+          placeholder="Enter full name" required class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label for="patientGender" class="text-gray-700 font-medium">Gender:</label>
+          <select id="patientGender" name="patientGender" required class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+            <option value="" disabled <%= editing && !patient.patientGender ? 'selected' : '' %>>Select Gender</option>
+            <option value="Male" <%= editing && patient.patientGender === 'Male' ? 'selected' : '' %>>Male</option>
+            <option value="Female" <%= editing && patient.patientGender === 'Female' ? 'selected' : '' %>>Female</option>
+            <option value="Other" <%= editing && patient.patientGender === 'Other' ? 'selected' : '' %>>Other</option>
+          </select>
+        </div>
+        
+        <div>
+          <label for="patientAge" class="text-gray-700 font-medium">Age:</label>
+          <input type="number" id="patientAge" name="patientAge" 
+          value="<%= editing ? patient.patientAge : '' %>"
+          placeholder="Enter age" required class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+          <label for="patientContact" class="text-gray-700 font-medium">Contact No:</label>
+          <input type="tel" id="patientContact" name="patientContact" 
+         value="<%= editing ? patient.patientContact.replace('+91', '') : '' %>"
+         placeholder="Enter 10-digit number" 
+         maxlength="10"
+         pattern="[6-9]\d{9}"
+         title="Please enter a valid 10-digit mobile number"
+         required
+         class="border border-gray-300 rounded-r-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+          <label for="patientEmail" class="text-gray-700 font-medium">Email ID:</label>
+          <input type="email" id="patientEmail" name="patientEmail" 
+          value="<%= editing ? patient.patientEmail : '' %>"
+          placeholder="Enter email" required class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+          <label for="patientAddress" class="text-gray-700 font-medium">Address:</label>
+          <textarea id="patientAddress" name="patientAddress" rows="4"
+          placeholder="Enter full address including street, city, state, and ZIP code" required class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 resize-none"><%= editing ? patient.patientAddress : '' %></textarea>
+        </div>
+        
+        <div>
+          <label for="medicationPhotoUrl" class="text-gray-700 font-medium">Medication:</label>
+          <input type="file" id="medicationPhotoUrl" name="medicationPhotoUrl" accept="image/*,application/pdf"
+          class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-blue-500">
+          
+          <% if (editing && patient.medicationPhotoUrl) { %>
+            <a href="/<%= patient.medicationPhotoUrl.replace(/\\/g, '/') %>" 
+               <%= patient.medicationPhotoUrl.endsWith('.pdf') ? '' : 'download' %> 
+               class="text-blue-500 underline">
+              <%= patient.medicationPhotoUrl.endsWith('.pdf') ? 'View Uploaded PDF' : 'Download Uploaded Photo' %>
+            </a>
+          <% } %>
+        </div>
+        
+        <button type="submit" class="bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition duration-300"><%= editing ? 'UPDATE' : 'Add' %> PATIENT</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
