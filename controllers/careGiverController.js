@@ -22,6 +22,38 @@ exports.postAddCareGiver = async (req, res, next) => {
       caregiver_role,
     } = req.body;
 
+    // Basic validation
+    if (
+      !caregiver_name ||
+      !caregiver_gender ||
+      !caregiver_dob ||
+      !caregiver_contact ||
+      !caregiver_email ||
+      !caregiver_address ||
+      !caregiver_role
+    ) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
+    }
+
+    // Optional: validate contact number format (10 digits)
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(caregiver_contact)) {
+      return res.status(400).json({
+        message: "Contact number must be a 10-digit number",
+      });
+    }
+
+    // Optional: validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(caregiver_email)) {
+      return res.status(400).json({
+        message: "Invalid email address",
+      });
+    }
+
+    // Create caregiver
     const newCareGiver = new Caregivers({
       name: caregiver_name,
       gender: caregiver_gender,
@@ -34,7 +66,6 @@ exports.postAddCareGiver = async (req, res, next) => {
 
     const savedCareGiver = await newCareGiver.save();
 
-    // ✅ Return JSON response
     res.status(201).json({
       message: "Care Giver added successfully",
       caregiver: savedCareGiver,
@@ -47,6 +78,7 @@ exports.postAddCareGiver = async (req, res, next) => {
     });
   }
 };
+
 
 
 

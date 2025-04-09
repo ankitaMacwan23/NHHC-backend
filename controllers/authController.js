@@ -49,13 +49,14 @@ exports.postLogin = async (req, res) => {
         message: "Invalid credentials or account not approved by admin.",
       });
     }
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    //const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    OTPStore[mobile] = otp;
+    //OTPStore[mobile] = otp;
 
-    console.log(`OTP for ${mobile} is ${otp}`); // For now
+    //console.log(`OTP for ${mobile} is ${otp}`); // For now
 
-    return res.json({ success: true, message: "OTP sent successfully (check console)" });
+    //return res.json({ success: true, message: "OTP sent successfully (check console)" });
+    return res.json({ success: true, caregiver });
 
   } catch (err) {
     console.error("Login error:", err);
