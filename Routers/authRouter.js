@@ -10,7 +10,7 @@ const authRouter = express.Router();
 
 authRouter.get("/login",authController.getLogin);
 
-authRouter.post("/login", authController.postLogin);
+authRouter.post("/login/caregiver", authController.postLogin);
 
 authRouter.post("/login/verify-otp", authController.postVerifyOtp);
 
