@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Details</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-50 min-h-screen flex">
+
+  <!-- Sidebar Navigation -->
+  <nav class="bg-green-500 text-white w-64 min-h-screen p-6 fixed">
+    <h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
+    <ul class="space-y-4">
+      <li><a href="/" class="hover:text-gray-200 block">🏠 Home</a></li>
+      <li><a href="/admin" class="hover:text-gray-200 block">📝 Patients</a></li>
+      <li><a href="#" class="hover:text-gray-200 block">👩‍⚕️ Caregivers</a></li>
+      <li><a href="#" class="hover:text-gray-200 block">🚪 Logout</a></li>
+    </ul>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="ml-64 w-full p-6">
+    
+    <!-- Header -->
+    <header class="bg-white shadow-md p-4 rounded-lg mb-6 text-center">
+      <h2 class="text-3xl font-semibold text-blue-600">Welcome to Admin Panel</h2>
+    </header>
+
+    <!-- Patient Details Section (Compact) -->
+    <div class="bg-white shadow-md p-4 rounded-lg">
+      <h2 class="text-xl font-semibold text-green-600 mb-4">Patient Details</h2>
+
+      <div class="grid grid-cols-2 gap-4 text-base border-b pb-4 mb-4">
+        <div>
+          <p><strong>Name:</strong> <%= patient.patientName %></p>
+          <p><strong>Age:</strong> <%= patient.patientAge %></p>
+          <p><strong>Gender:</strong> <%= patient.patientGender %></p>
+        </div>
+        <div>
+          <p><strong>Contact:</strong> <%= patient.patientContact %></p>
+          <p><strong>Email:</strong> <%= patient.patientEmail %></p>
+          <p><strong>Medications:</strong> <%= patient.medications %></p>
+        </div>
+      </div>
+
+      <div class="mt-4 flex space-x-3">
+        <button class="flex items-center bg-green-500 text-white text-sm px-3 py-1.5 rounded-md hover:bg-green-600 transition shadow">
+          💳 <span class="ml-2">Payment</span>
+        </button>
+        <form method="post" action="/patient/favourites">
+          <input type="hidden" name="id" value="<%= patient.id %>">
+          <button class="flex items-center bg-yellow-400 text-white text-sm px-3 py-1.5 rounded-md hover:bg-yellow-500 transition shadow">
+            ⭐ <span class="ml-2">Favorite</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Allocation Form -->
+      <!-- Success or Error Message -->
+      <% if (success_msg && success_msg.length > 0) { %>
+        <div class="mb-4 p-4 rounded bg-green-100 text-green-800 border border-green-300">
+          ✅ <%= success_msg[0] %>
+        </div>
+      <% } %>
+      
+      <% if (error_msg && error_msg.length > 0) { %>
+        <div class="mb-4 p-4 rounded bg-red-100 text-red-800 border border-red-300">
+          ❌ <%= error_msg[0] %>
+        </div>
+      <% } %>
+      
+  
+      <div class="bg-white shadow-md p-4 rounded-lg mt-6">
+        <h2 class="text-lg font-semibold text-blue-600 mb-3">Allocate Caregivers</h2>
+      
+        <form action="/patient/assign-caregiver" method="POST" class="space-y-4 text-sm">
+          <input type="hidden" name="patientId" value="<%= patient._id %>">
+          <input type="hidden" name="patientName" value="<%= patient.patientName %>">
+      
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Doctor -->
+            <div>
+              <label class="block mb-1 font-medium">Doctor</label>
+              <select name="doctorId" class="w-full border px-2 py-1.5 rounded">
+                <option value="">-- Select --</option>
+                <% caregivers.doctors.forEach(doc => { %>
+                  <option value="<%= doc._id %>"><%= doc.name %></option>
+                <% }) %>
+              </select>
+            </div>
+      
+            <!-- Nurse -->
+            <div>
+              <label class="block mb-1 font-medium">Nurse</label>
+              <select name="nurseId" class="w-full border px-2 py-1.5 rounded">
+                <option value="">-- Select --</option>
+                <% caregivers.nurses.forEach(nurse => { %>
+                  <option value="<%= nurse._id %>"><%= nurse.name %></option>
+                <% }) %>
+              </select>
+            </div>
+      
+            <!-- Physio -->
+            <div>
+              <label class="block mb-1 font-medium">Physio</label>
+              <select name="physioId" class="w-full border px-2 py-1.5 rounded">
+                <option value="">-- Select --</option>
+                <% caregivers.physios.forEach(phy => { %>
+                  <option value="<%= phy._id %>"><%= phy.name %></option>
+                <% }) %>
+              </select>
+            </div>
+      
+            <!-- Cleaner -->
+            <div>
+              <label class="block mb-1 font-medium">Cleaner</label>
+              <select name="cleanerId" class="w-full border px-2 py-1.5 rounded">
+                <option value="">-- Select --</option>
+                <% caregivers.cleaners.forEach(clean => { %>
+                  <option value="<%= clean._id %>"><%= clean.name %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+      
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Allocation Date -->
+            <div>
+              <label class="block mb-1 font-medium">Date</label>
+              <input type="date" name="allocationDate" class="w-full border px-2 py-1.5 rounded" min="<%= new Date().toISOString().split('T')[0] %>" required />
+            </div>
+      
+            <!-- Duty -->
+            <div>
+              <label class="block mb-1 font-medium">Duty</label>
+              <select name="duty" class="w-full border px-2 py-1.5 rounded" required>
+                <option value="">-- Select --</option>
+                <option value="Morning">Morning</option>
+                <option value="Afternoon">Afternoon</option>
+                <option value="Evening">Evening</option>
+                <option value="Night">Night</option>
+              </select>
+            </div>
+          </div>
+      
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+            Assign Caregivers
+          </button>
+        </form>
+      </div>
+  </div>
+</body>
+<script>
+   const form = document.querySelector("form[action='/patient/assign-caregiver']");
+  form.addEventListener("submit", function (e) {
+    const doctor = form.querySelector("select[name='doctorId']").value;
+    const nurse = form.querySelector("select[name='nurseId']").value;
+    const physio = form.querySelector("select[name='physioId']").value;
+    const cleaner = form.querySelector("select[name='cleanerId']").value;
+
+    if (!doctor && !nurse && !physio && !cleaner) {
+      e.preventDefault(); // Stop form submission
+      alert("❌ Please select at least one caregiver.");
+    }
+  });
+
+  setTimeout(() => {
+    const alertBoxes = document.querySelectorAll('.bg-green-100, .bg-red-100');
+    alertBoxes.forEach(el => el.style.display = 'none');
+  }, 10000)//ide after 3 seconds
+</script>
+</html>

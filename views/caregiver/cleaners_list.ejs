@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caregiver List</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-50 min-h-screen flex">
+
+  <!-- Sidebar Navigation -->
+  <nav class="bg-green-600 text-white w-64 min-h-screen p-6 fixed shadow-lg">
+    <h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
+    <ul class="space-y-4">
+      <li><a href="/" class="flex items-center space-x-2 hover:bg-green-700 p-2 rounded-md">🏠 <span>Home</span></a></li>
+      <li><a href="/admin/patients/" class="flex items-center space-x-2 hover:bg-green-700 p-2 rounded-md">📝 <span>Patients</span></a></li>
+      <li><a href="/admin/caregivers/" class="flex items-center space-x-2 hover:bg-green-700 p-2 rounded-md">👩‍⚕️ <span>Caregivers</span></a></li>
+      <li><a href="#" class="flex items-center space-x-2 hover:bg-red-600 p-2 rounded-md">🚪 <span>Logout</span></a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="ml-64 w-full p-6">
+    <header class="bg-white shadow-lg p-6 rounded-lg mb-6 text-center">
+      <h2 class="text-3xl font-semibold text-blue-700">Cleaners List</h2>
+    </header>
+
+    <div class="container mx-auto p-6">
+      <% if (cleaners.length > 0) { %>
+        <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+          <table class="min-w-full table-auto border-collapse">
+            <thead>
+              <tr class="bg-green-600 text-white">
+                <th class="p-4 text-left">Name</th>
+                <th class="p-4 text-left">Role</th>
+                <th class="p-4 text-left">Gender</th>
+                <th class="p-4 text-left">Contact</th>
+                <th class="p-4 text-left">Email</th>
+                <th class="p-4 text-left">Address</th>
+                <th class="p-4 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% cleaners.forEach(cleaner => { %>
+                <tr class="border-b">
+                  <td class="p-4"><%= cleaner.name %></td>
+                  <td class="p-4"><%= cleaner.role %></td>
+                  <td class="p-4"><%= cleaner.gender %></td>
+                  <td class="p-4"><%= cleaner.contact %></td>
+                  <td class="p-4"><%= cleaner.email %></td>
+                  <td class="p-4"><%= cleaner.address %></td>
+                  <td class="p-4 flex space-x-2">
+                    <a href="/admin/caregivers/cleaner/<%= cleaner._id %>/detail" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700">Details</a>
+                    <a href="/admin/caregivers/cleaner/<%= cleaner._id %>/edit" class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-700">Edit</a>
+                    <form action="/admin/caregivers/cleaner/<%= cleaner._id %>/delete" method="POST" class="inline">
+                      <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p class="text-center text-gray-500 text-lg mt-6">🚫 No Cleaners found.</p>
+      <% } %>
+    </div>
+  </div>
+
+</body>
+</html>

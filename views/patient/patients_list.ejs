@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-50 min-h-screen flex">
+
+  <!-- Sidebar Navigation -->
+  <nav class="bg-green-600 text-white w-64 min-h-screen p-6 fixed shadow-lg">
+    <h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
+    <ul class="space-y-4">
+      <li>
+        <a href="/" class="flex items-center space-x-2 hover:bg-green-700 p-2 rounded-md">
+          🏠 <span>Home</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/patients/" class="flex items-center space-x-2 hover:bg-green-700 p-2 rounded-md">
+          📝 <span>Patients</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/caregivers/" class="flex items-center space-x-2 hover:bg-green-700 p-2 rounded-md">
+          👩‍⚕️ <span>Caregivers</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="flex items-center space-x-2 hover:bg-red-600 p-2 rounded-md">
+          🚪 <span>Logout</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="ml-64 w-full p-6">
+    <header class="bg-white shadow-lg p-6 rounded-lg mb-6 text-center">
+      <h2 class="text-3xl font-semibold text-blue-700">Welcome to Admin Panel</h2>
+    </header>
+
+    <!-- Patients List Section -->
+    <div class="bg-white shadow-lg p-6 rounded-lg">
+      <h2 class="text-2xl font-semibold text-green-700 mb-4">Patients List</h2>
+      <table class="min-w-full bg-white border border-gray-300 rounded-lg shadow">
+        <thead>
+          <tr class="bg-green-300 text-gray-800">
+            <th class="py-3 px-6 border">Name</th>
+            <th class="py-3 px-6 border">Age</th>
+            <th class="py-3 px-6 border">Contact</th>
+            <th class="py-3 px-6 border">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% patients.forEach(patient => { %>
+          <tr class="border hover:bg-gray-100 transition">
+            <td class="py-3 px-6 border"><%= patient.patientName %></td>
+            <td class="py-3 px-6 border"><%= patient.patientAge %></td>
+            <td class="py-3 px-6 border"><%= patient.patientContact %></td>
+            <td class="py-3 px-6 border flex space-x-2">
+              <!-- Edit Button -->
+              <a href="/patient/edit-patient/<%= patient.id %>?editing=true"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition">
+                ✏️ Edit
+              </a>
+
+              <!-- Delete Button -->
+              <form method="post" action="/patient/delete-patient/<%= patient.id %>" class="inline">
+                <button type="submit"
+                  class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-md transition">
+                  🗑 Delete
+                </button>
+              </form>
+
+              <!-- Detail Button -->
+              <a href="/patient/detail-patient/<%= patient.id %>"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md transition">
+                📄 Detail
+              </a>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</body>
+</html>
