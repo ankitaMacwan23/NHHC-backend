@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 //core module
 const path = require('path');
 
@@ -32,4 +33,28 @@ authRouter.post("/logout",authController.postLogout);
 
 
 
+=======
+//core module
+const path = require('path');
+
+//External Modules
+const express = require('express');
+
+const authController = require('./../controllers/authController');
+
+const authRouter = express.Router();
+
+authRouter.get("/login",authController.getLogin);
+
+authRouter.post("/login/caregiver", authController.postLogin);
+
+authRouter.post("/login/verify-otp", authController.postVerifyOtp);
+
+authRouter.post("/logout",authController.postLogout);
+
+authRouter.post('/user/save-mobile', authController.postSaveMobile);
+
+
+
+>>>>>>> 4c41389958edadc7fa3029204947fa161358c254
 module.exports = authRouter;

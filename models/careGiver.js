@@ -10,6 +10,7 @@ const caregiverSchema = new mongoose.Schema({
     role: { type: String, enum: ["Nurse", "Doctor", "Physio", "Cleaner"], required: true },
     status: {
         type: String,
+<<<<<<< HEAD
         enum: ["Pending", "Approved", "Rejected",'PaymentDone'],
         default: "Pending"
       },
@@ -17,6 +18,11 @@ const caregiverSchema = new mongoose.Schema({
         type: Boolean,
         default: false
       }
+=======
+        enum: ["Pending", "Approved", "Rejected"],
+        default: "Pending"
+      },
+>>>>>>> 4c41389958edadc7fa3029204947fa161358c254
     //document: { type: String, required: true }, // Path to uploaded document
     //aadhar_document: { type: String, required: true }, // Path to Aadhar upload
 });

@@ -33,6 +33,7 @@ const patientToCaregiverSchema = new mongoose.Schema({
     type: String,
     enum: ['service_pending', 'service_completed'],
     default: 'service_pending',
+<<<<<<< HEAD
   },
   payment_to_caregiver: {
     type: String,
@@ -75,3 +76,32 @@ const patientToCaregiverSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('PatientToCaregiver', patientToCaregiverSchema);
+=======
+  }
+});
+
+module.exports = mongoose.model('PatientToCaregiver', patientToCaregiverSchema);
+
+
+
+//output look like 
+/* {
+  "patientId": "P001",
+  "caregiverId": "C001",
+  "caregiverRole": "Nurse",
+  "date": "2025-04-09T00:00:00.000Z",
+  "duty": "Morning",
+  "verificationCode": "128394",
+  "status": "service_pending"
+}
+{
+  "patientId": "P001",
+  "caregiverId": "C002",
+  "caregiverRole": "Doctor",
+  "date": "2025-04-09T00:00:00.000Z",
+  "duty": "Morning",
+  "verificationCode": "740215",
+  "status": "service_pending"
+}
+ */
+>>>>>>> 4c41389958edadc7fa3029204947fa161358c254

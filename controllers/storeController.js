@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const Service = require('../models/service'); 
 const Blog = require('../models/blog'); 
 
@@ -123,3 +124,14 @@ exports.postAddBlog = async (req, res) => {
 
 
 
+=======
+exports.getIndex = (req,res,next) => {
+ 
+  res.render('store/index',{ pageTitle : 'Naysan Home Health Care'});
+}
+
+exports.getServices = (req,res,next) => {
+ 
+  res.render('store/services',{ pageTitle : 'Naysan Home Health Care'});
+}
+>>>>>>> 4c41389958edadc7fa3029204947fa161358c254

@@ -215,9 +215,12 @@
   }
 }
 @layer utilities {
+<<<<<<< HEAD
   .visible {
     visibility: visible;
   }
+=======
+>>>>>>> 4c41389958edadc7fa3029204947fa161358c254
   .absolute {
     position: absolute;
   }
