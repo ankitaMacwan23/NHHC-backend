@@ -10,11 +10,7 @@ const patientSchema = new mongoose.Schema({
   medicationPhotoUrl: {},
   status: {
     type: String,
-<<<<<<< HEAD
     enum: ['Pending', 'Approved','Rejected','PaymentDone'],
-=======
-    enum: ['Pending', 'Approved'],
->>>>>>> 4c41389958edadc7fa3029204947fa161358c254
     default: 'Pending'
   }
 });
