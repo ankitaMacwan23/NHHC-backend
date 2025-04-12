@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 //core module
 const path = require('path');
 
@@ -25,20 +24,4 @@ careGiverRouter.get("/caregivers-by-role/:role",careGiverController.getCaregiver
 
 
 
-=======
-//core module
-const path = require('path');
-
-//External Modules
-const express = require('express');
-
-const careGiverController = require('./../controllers/careGiverController');
-
-const careGiverRouter = express.Router();
-
-careGiverRouter.get("/",careGiverController.getCareGiver);
-
-careGiverRouter.post("/add-caregiver",careGiverController.postAddCareGiver);
-
->>>>>>> 4c41389958edadc7fa3029204947fa161358c254
 module.exports = careGiverRouter;
