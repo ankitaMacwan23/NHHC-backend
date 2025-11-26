@@ -16,10 +16,7 @@ authRouter.get("/admin/check-session", authController.getCheckAdminSession);
 // for frontend(App) site API's
 authRouter.post("/login/caregiver", authController.postLogin);
 authRouter.post('/user/save-mobile', authController.postSaveMobile);
-
-
-
-
+authRouter.post('/send-otp', authController.postSendOtp); // Send OTP via SMS
 
 
 authRouter.post("/login/verify-otp", authController.postVerifyOtp);
