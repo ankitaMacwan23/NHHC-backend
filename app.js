@@ -91,8 +91,10 @@ app.use(errorController.get404);
 mongoose.connect(MONGO_DB_URL)
   .then(() => {
     console.log('✅ Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+      console.log(`   Local: http://localhost:${PORT}`);
+      console.log(`   Network: http://192.168.1.11:${PORT}`);
     });
   })
   .catch(err => {

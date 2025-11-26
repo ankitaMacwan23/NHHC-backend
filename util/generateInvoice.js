@@ -12,7 +12,7 @@ const generateInvoice = (res, patient, caregivers, paymentDetails) => {
   // Header
   doc
     .fontSize(20)
-    .text('Patient Payment Invoice', { align: 'center' })
+    .text('Patient Payments Invoice', { align: 'center' })
     .moveDown();
 
   // Patient Info
