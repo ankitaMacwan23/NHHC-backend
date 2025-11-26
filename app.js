@@ -2,6 +2,7 @@ require('dotenv').config();
 
 // Core Modules
 const path = require('path');
+const fs = require('fs');
 
 // External Modules
 const express = require('express');
@@ -70,22 +71,31 @@ app.set('views', 'views');
 app.use(express.static(path.join(rootDir, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// API Routes
+// API Routes (MUST come before catch-all routes)
 app.use('/auth', authRouter);
 app.use(storeRouter);
 app.use('/patient', patientRouter);
 app.use('/admin', adminRouter);
 app.use('/caregiver', careGiverRouter);
 
-// Serve Frontend (Vite/React)
-app.use(express.static(path.join(__dirname, 'dist')));
-app.get('*', (req, res) => {
-  console.log('Serving React frontend');
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
+// Serve Frontend (Vite/React) - only if dist folder exists
+const distPath = path.join(__dirname, 'dist');
 
-// 404 Handler
-app.use(errorController.get404);
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    console.log('Serving React frontend');
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  console.warn('⚠️  dist folder not found - frontend not served');
+  // Still serve API routes without frontend
+}
+
+// 404 Handler (only if no frontend)
+if (!fs.existsSync(distPath)) {
+  app.use(errorController.get404);
+}
 
 // DB Connection & Start Server
 mongoose.connect(MONGO_DB_URL)
