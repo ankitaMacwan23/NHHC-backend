@@ -7,13 +7,15 @@ const patientSchema = new mongoose.Schema({
   patientContact: { type: String, required: true },
   patientEmail: { type: String, required: true },
   patientAddress: { type: String, required: true },
+  document: { type: String, default: null },
   medicationPhotoUrl: {},
   status: {
     type: String,
-    enum: ['Pending', 'Approved','Rejected','PaymentDone'],
+    enum: ['Pending', 'Approved', 'Rejected', 'PaymentDone'],
     default: 'Pending'
   }
 });
+
 
 // Add geospatial index
 patientSchema.index({ location: "2dsphere" });
