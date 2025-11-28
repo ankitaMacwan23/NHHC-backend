@@ -57,7 +57,7 @@ exports.postLogin = async (req, res) => {
   }
 };
 
-//mobile no saved after first time user install app
+// mobile no saved after first time user install app
 exports.postSaveMobile = async (req, res) => {
   try {
     const { mobile } = req.body;
@@ -80,97 +80,10 @@ exports.postSaveMobile = async (req, res) => {
   }
 };
 
+// ----------------- OTP Logic (Simple Store, no SMS API) -----------------
 
-
-
-
-
-
-
-// authController.js
-const axios = require('axios');
+// const fast2sms = require('fast-two-sms'); // Commented out for now
 const OTPStore = {}; // Save OTPs temporarily
-
-// Fast2SMS Helper
-const sendSmsWithFast2Sms = async (toNumber, messageText) => {
-  const apiKey = process.env.FAST2SMS_API_KEY;
-  if (!apiKey) {
-    throw new Error('FAST2SMS_API_KEY not configured in environment');
-  }
-
-  // Format number: ensure it has country code (91 for India)
-  let formattedNumber = String(toNumber).trim();
-  if (!formattedNumber.startsWith('91') && formattedNumber.length === 10) {
-    formattedNumber = '91' + formattedNumber; // add country code if missing
-  }
-
-  const payload = {
-    route: 'v3',                    // transactional route (recommended for OTP)
-    sender_id: 'FSTSMS',            // default; replace with your approved sender ID
-    message: messageText,
-    language: 'english',
-    flash: 0,
-    numbers: formattedNumber
-  };
-
-  try {
-    const response = await axios.post('https://www.fast2sms.com/dev/bulkV2', payload, {
-      headers: {
-        'authorization': apiKey,
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000
-    });
-    console.log('✅ Fast2SMS response:', response.data);
-    return response.data;
-  } catch (err) {
-    console.error('❌ Fast2SMS error:', err?.response?.data || err.message);
-    throw err;
-  }
-};
-
-// POST /auth/send-otp — Generate OTP and send via SMS
-exports.postSendOtp = async (req, res) => {
-  try {
-    const { mobile } = req.body;
-
-    if (!mobile || mobile.length < 10) {
-      return res.status(400).json({ success: false, message: 'Valid mobile number is required' });
-    }
-
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    OTPStore[mobile] = otp;
-
-    // Auto-expire OTP after 5 minutes
-    setTimeout(() => {
-      delete OTPStore[mobile];
-      console.log(`OTP for ${mobile} expired`);
-    }, 5 * 60 * 1000);
-
-    const messageText = `Your Naysan Home Health Care OTP is: ${otp}. Do not share this with anyone.`;
-
-    // Send via Fast2SMS
-    if (process.env.FAST2SMS_API_KEY) {
-      try {
-        await sendSmsWithFast2Sms(mobile, messageText);
-        console.log(`✅ OTP sent to ${mobile}`);
-        return res.json({ success: true, message: 'OTP sent successfully' });
-      } catch (smsErr) {
-        console.error('Failed to send OTP via Fast2SMS:', smsErr.message);
-        return res.status(500).json({ success: false, message: 'Failed to send OTP', error: smsErr.message });
-      }
-    } else {
-      // Fallback: return OTP (development only — DO NOT USE IN PRODUCTION)
-      console.warn('⚠️  FAST2SMS_API_KEY not set — returning OTP in response (dev only)');
-      return res.json({ success: true, message: 'OTP generated (dev)', otp });
-    }
-  } catch (err) {
-    console.error('postSendOtp error:', err);
-    return res.status(500).json({ success: false, message: 'Server error', error: err.message });
-  }
-};
-
 
 exports.postVerifyOtp = async (req, res) => {
   const { mobile, otp, role } = req.body;
@@ -223,4 +136,3 @@ exports.postLogout = (req,res,next) => {
     res.redirect("/auth/login");
   })
 }
-  

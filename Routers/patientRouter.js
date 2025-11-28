@@ -6,6 +6,8 @@ const express = require('express');
 
 const patientController = require('./../controllers/patientController');
 
+const upload = require("../middleware/uploadPatientDocument");
+
 const patientRouter = express.Router();
 
 // for admin site API's
@@ -17,7 +19,7 @@ patientRouter.post("/assigned-caregivers", patientController.getAssignedCaregive
 patientRouter.post("/assign-caregiver", patientController.postAssignCaregiver);
 
 // for frontend(App) site API's
-patientRouter.post("/add-patient", patientController.postAddPatient);
+patientRouter.post("/add-patient", upload.single("document"), patientController.postAddPatient);
 patientRouter.post("/assigned-patients", patientController.getAssignedPatientToCareGiver);
 patientRouter.post("/completed-patients", patientController.getCompletedAssignedPatients);
 patientRouter.post("/verified_code", patientController.verifyPatientCode);
