@@ -231,7 +231,7 @@ exports.postAssignCaregiver = async (req, res) => {
 //--------------------------for frontend(App) Functions------------------------------
 
 //add patient data after patient registration
-exports.postAddPatient = async (req, res, next) => {
+exports.postAddPatient = async (req, res) => {
   try {
     const {
       patientName,
@@ -242,6 +242,8 @@ exports.postAddPatient = async (req, res, next) => {
       patientAddress,
     } = req.body;
 
+    const documentPath = req.file ? req.file.path : null;
+
     const newPatient = new Patient({
       patientName,
       patientGender,
@@ -249,21 +251,28 @@ exports.postAddPatient = async (req, res, next) => {
       patientContact,
       patientEmail,
       patientAddress,
+      document: documentPath
     });
 
     const savedPatient = await newPatient.save();
+
     res.status(201).json({
+      success: true,
       message: "Patient added successfully",
-      patient: savedPatient,
+      patient: savedPatient
     });
+
   } catch (error) {
     console.error("Error saving patient:", error);
+
     res.status(500).json({
+      success: false,
       message: "Server error",
-      error: error.message || error,
+      error: error.message
     });
   }
 };
+
 
 //get assigned patient to caregiver for frontend
 exports.getAssignedPatientToCareGiver = async (req, res) => {
