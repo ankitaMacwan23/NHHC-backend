@@ -1,10 +1,20 @@
 const path = require("path");
+const fs = require("fs");
 const multer = require("multer");
 
-// where to save files
+// absolute folder path
+const uploadPath = path.resolve(__dirname, "../uploads/patient-documents");
+
+// ensure folder exists
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+  console.log("📁 Created folder:", uploadPath);
+}
+
+// storage engine
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../uploads/patient-documents"));
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -23,5 +33,5 @@ const fileFilter = (req, file, cb) => {
 module.exports = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
