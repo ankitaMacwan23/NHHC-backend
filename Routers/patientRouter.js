@@ -6,7 +6,7 @@ const express = require('express');
 
 const patientController = require('./../controllers/patientController');
 
-const upload = require("../middleware/uploadPatientDocument");
+const upload = require("./../middleware/uploadPatientDocument");
 
 const patientRouter = express.Router();
 
