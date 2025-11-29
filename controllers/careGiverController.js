@@ -55,6 +55,25 @@ exports.rejectCaregiver = async (req, res) => {
 };
 
 //--------------------------for frontend(App) Functions------------------------------
+
+// helper: upload one file buffer to cloudinary
+const uploadToCloudinary = (fileBuffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: "image", // we’re uploading images from app
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }
+    );
+
+    stream.end(fileBuffer);
+  });
+};
+
 exports.postAddCareGiver = async (req, res) => {
   try {
     const {
@@ -67,7 +86,7 @@ exports.postAddCareGiver = async (req, res) => {
       caregiver_role,
     } = req.body;
 
-    // Validate required fields
+    // Basic validation
     if (
       !caregiver_name ||
       !caregiver_gender ||
@@ -77,42 +96,53 @@ exports.postAddCareGiver = async (req, res) => {
       !caregiver_address ||
       !caregiver_role
     ) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
     }
+
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(caregiver_contact)) {
+      return res.status(400).json({
+        success: false,
+        message: "Contact number must be a 10-digit number",
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(caregiver_email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email address",
+      });
+    }
+
+    // 🔹 Files from Multer
+    const aadharFile =
+      req.files && req.files.aadhar_document && req.files.aadhar_document[0];
+    const certificateFile =
+      req.files &&
+      req.files.certificate_document &&
+      req.files.certificate_document[0];
 
     let aadharUrl = null;
     let certificateUrl = null;
 
-    // Upload Aadhar
-    if (req.files?.aadhar) {
-      const uploadAadhar = await cloudinary.uploader.upload_stream(
-        { folder: "nhhc/caregivers" },
-        (error, result) => {
-          if (error) console.error(error);
-        }
+    // 🔹 Upload to Cloudinary (if file present)
+    if (aadharFile) {
+      aadharUrl = await uploadToCloudinary(
+        aadharFile.buffer,
+        "nhhc/caregivers/aadhar"
       );
-
-      const buffer = req.files.aadhar[0].buffer;
-      aadharUrl = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream(
-          { folder: "nhhc/caregivers" },
-          (err, result) => resolve(result.secure_url)
-        ).end(buffer);
-      });
+    }
+    if (certificateFile) {
+      certificateUrl = await uploadToCloudinary(
+        certificateFile.buffer,
+        "nhhc/caregivers/certificates"
+      );
     }
 
-    // Upload Certificate
-    if (req.files?.certificate) {
-      const buffer = req.files.certificate[0].buffer;
-      certificateUrl = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream(
-          { folder: "nhhc/caregivers" },
-          (err, result) => resolve(result.secure_url)
-        ).end(buffer);
-      });
-    }
-
-    // Create caregiver
     const newCareGiver = new Caregivers({
       name: caregiver_name,
       gender: caregiver_gender,
@@ -121,22 +151,29 @@ exports.postAddCareGiver = async (req, res) => {
       email: caregiver_email,
       address: caregiver_address,
       role: caregiver_role,
-
-      aadhar_url: aadharUrl,
-      certificate_url: certificateUrl,
+      aadhar_document: aadharUrl,
+      certificate_document: certificateUrl,
     });
 
     const savedCareGiver = await newCareGiver.save();
 
     res.status(201).json({
+      success: true,
       message: "Caregiver added successfully",
       caregiver: savedCareGiver,
     });
   } catch (error) {
-    console.error("Error saving caregiver:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error saving care giver:", error);
+
+    // Multer field-name errors will show up here too
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message || String(error),
+    });
   }
 };
+
 
 
 
