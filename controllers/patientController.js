@@ -242,7 +242,7 @@ exports.postAddPatient = async (req, res) => {
       patientAddress,
     } = req.body;
 
-    const documentPath = req.file ? req.file.path : null;
+    const documentUrl = req.file ? req.file.path : null; // <-- Cloudinary URL
 
     const newPatient = new Patient({
       patientName,
@@ -251,7 +251,7 @@ exports.postAddPatient = async (req, res) => {
       patientContact,
       patientEmail,
       patientAddress,
-      document: documentPath
+      document: documentUrl,
     });
 
     const savedPatient = await newPatient.save();
@@ -259,19 +259,19 @@ exports.postAddPatient = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Patient added successfully",
-      patient: savedPatient
+      patient: savedPatient,
     });
 
   } catch (error) {
-    console.error("Error saving patient:", error);
-
+    console.error(error);
     res.status(500).json({
       success: false,
       message: "Server error",
-      error: error.message
+      error: error.message,
     });
   }
 };
+
 
 
 //get assigned patient to caregiver for frontend

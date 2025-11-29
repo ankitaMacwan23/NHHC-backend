@@ -3,10 +3,9 @@ const path = require('path');
 
 //External Modules
 const express = require('express');
+const upload = require("./../middleware/uploadPatientDocument");
 
 const patientController = require('./../controllers/patientController');
-
-const upload = require("../middleware/uploadPatientDocument");
 
 const patientRouter = express.Router();
 
