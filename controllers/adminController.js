@@ -14,6 +14,7 @@ exports.getAllPatients = async (req, res, next) => {
   }
 };
 // Return patients in JSON format for React frontend
+// Return caregivers in JSON format for React frontend
 exports.getAllCareGivers = async (req, res, next) => {
   try {
     const pendingCaregivers = await Caregivers.find({ status: "Pending" });
@@ -32,7 +33,11 @@ exports.getAllCareGivers = async (req, res, next) => {
               dob: "$dob",
               contact: "$contact",
               email: "$email",
-              address: "$address"
+              address: "$address",
+
+              // ⭐ Add these fields
+              aadhar_document: "$aadhar_document",
+              certificate_document: "$certificate_document"
             }
           }
         }
@@ -48,6 +53,7 @@ exports.getAllCareGivers = async (req, res, next) => {
     res.status(500).json({ error: "Failed to fetch caregivers" });
   }
 };
+
 
 
 //--------------------------for frontend(App) Functions------------------------------
