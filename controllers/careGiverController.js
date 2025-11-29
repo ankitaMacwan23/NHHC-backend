@@ -2,6 +2,15 @@ const { check, validationResult } = require('express-validator');
 const Patient = require('./../models/patient');
 const Caregivers = require('./../models/careGiver');
 
+
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 //--------------------for admin site functions--------------------------------------
 
 exports.postAddToFavourite = async (req, res) => {
@@ -46,7 +55,7 @@ exports.rejectCaregiver = async (req, res) => {
 };
 
 //--------------------------for frontend(App) Functions------------------------------
-exports.postAddCareGiver = async (req, res, next) => {
+exports.postAddCareGiver = async (req, res) => {
   try {
     const {
       caregiver_name,
@@ -58,7 +67,7 @@ exports.postAddCareGiver = async (req, res, next) => {
       caregiver_role,
     } = req.body;
 
-    // Basic validation
+    // Validate required fields
     if (
       !caregiver_name ||
       !caregiver_gender ||
@@ -68,24 +77,38 @@ exports.postAddCareGiver = async (req, res, next) => {
       !caregiver_address ||
       !caregiver_role
     ) {
-      return res.status(400).json({
-        message: "All fields are required",
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    let aadharUrl = null;
+    let certificateUrl = null;
+
+    // Upload Aadhar
+    if (req.files?.aadhar) {
+      const uploadAadhar = await cloudinary.uploader.upload_stream(
+        { folder: "nhhc/caregivers" },
+        (error, result) => {
+          if (error) console.error(error);
+        }
+      );
+
+      const buffer = req.files.aadhar[0].buffer;
+      aadharUrl = await new Promise((resolve) => {
+        cloudinary.uploader.upload_stream(
+          { folder: "nhhc/caregivers" },
+          (err, result) => resolve(result.secure_url)
+        ).end(buffer);
       });
     }
 
-    // Optional: validate contact number format (10 digits)
-    const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(caregiver_contact)) {
-      return res.status(400).json({
-        message: "Contact number must be a 10-digit number",
-      });
-    }
-
-    // Optional: validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(caregiver_email)) {
-      return res.status(400).json({
-        message: "Invalid email address",
+    // Upload Certificate
+    if (req.files?.certificate) {
+      const buffer = req.files.certificate[0].buffer;
+      certificateUrl = await new Promise((resolve) => {
+        cloudinary.uploader.upload_stream(
+          { folder: "nhhc/caregivers" },
+          (err, result) => resolve(result.secure_url)
+        ).end(buffer);
       });
     }
 
@@ -98,22 +121,23 @@ exports.postAddCareGiver = async (req, res, next) => {
       email: caregiver_email,
       address: caregiver_address,
       role: caregiver_role,
+
+      aadhar_url: aadharUrl,
+      certificate_url: certificateUrl,
     });
 
     const savedCareGiver = await newCareGiver.save();
 
     res.status(201).json({
-      message: "Care Giver added successfully",
+      message: "Caregiver added successfully",
       caregiver: savedCareGiver,
     });
   } catch (error) {
-    console.error("Error saving care giver:", error);
-    res.status(500).json({
-      message: "Server error",
-      error: error.message || error,
-    });
+    console.error("Error saving caregiver:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 
