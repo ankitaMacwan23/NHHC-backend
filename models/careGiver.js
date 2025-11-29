@@ -10,8 +10,9 @@ const caregiverSchema = new mongoose.Schema({
   role: { type: String, enum: ["Nurse", "Doctor", "Physio", "Cleaner"], required: true },
 
   // 📌 NEW: Cloudinary URLs
-  aadhar_url: { type: String },
-  certificate_url: { type: String },
+  aadhar_document: { type: String },
+certificate_document: { type: String },
+
 
   status: {
     type: String,
