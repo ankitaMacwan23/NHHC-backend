@@ -4,6 +4,8 @@ const path = require('path');
 //External Modules
 const express = require('express');
 
+const uploadCaregiverDocs = require("./../middleware/caregiverUpload");
+
 const careGiverController = require('./../controllers/careGiverController');
 
 const careGiverRouter = express.Router();
@@ -15,7 +17,11 @@ careGiverRouter.post("/reject-caregiver",careGiverController.rejectCaregiver);
 
 
 // for frontend(App) site API's
-careGiverRouter.post("/add-caregiver",careGiverController.postAddCareGiver);
+careGiverRouter.post(
+  "/add-caregiver",
+  uploadCaregiverDocs,
+  careGiverController.postAddCareGiver
+);
 
 
 
