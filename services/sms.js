@@ -19,12 +19,13 @@ async function sendSms(phone, message) {
     }
     case 'dev':
     default: {
-      // Dev only: surface the message in server logs so the flow is testable without a real gateway.
+      // The dev provider's whole purpose is to surface the OTP in logs instead of
+      // sending a real SMS, so it logs the code regardless of NODE_ENV.
+      // ⚠️ NEVER use SMS_PROVIDER=dev for real users — switch to twilio/msg91 before launch.
       if (process.env.NODE_ENV === 'production') {
-        console.warn('[sms] DEV provider used in production — OTP not actually sent to', phone);
-      } else {
-        console.log(`[sms:dev] -> ${phone}: ${message}`);
+        console.warn('[sms] WARNING: SMS_PROVIDER=dev while NODE_ENV=production — no real SMS sent. Use a real provider before launch.');
       }
+      console.log(`[sms:dev] -> ${phone}: ${message}`);
       return { provider: 'dev', delivered: true };
     }
   }
