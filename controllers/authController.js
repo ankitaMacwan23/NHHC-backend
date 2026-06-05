@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const Caregivers = require('../models/careGiver');
 const User = require('../models/user');
 const AdminUser = require('../models/adminUser');
@@ -6,12 +7,33 @@ const AdminUser = require('../models/adminUser');
 
 exports.getAdminLogin = async (req, res) => {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required." });
+    }
+
     const user = await AdminUser.findOne({ username });
-  
-    if (!user) return res.status(401).json({ message: "Unauthorized" });
-  
+    // Use a generic message + always-run compare path to avoid leaking which part failed.
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+
+    // Support legacy plaintext passwords: if the stored value isn't a bcrypt hash,
+    // compare directly and transparently upgrade it to a hash on success.
+    const looksHashed = typeof user.password === 'string' && user.password.startsWith('$2');
+    let ok;
+    if (looksHashed) {
+      ok = await bcrypt.compare(password, user.password);
+    } else {
+      ok = password === user.password;
+      if (ok) {
+        user.password = await bcrypt.hash(password, 10);
+        await user.save();
+      }
+    }
+
+    if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+
     req.session.isAdmin = true;
-    req.session.user = { username: user.username }; // optional
+    req.session.user = { username: user.username };
     return res.json({ message: "Authorized" });
 };
 

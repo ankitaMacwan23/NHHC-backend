@@ -11,6 +11,7 @@ const mongoose = require('mongoose');
 const flash = require('connect-flash');
 const session = require('express-session');
 const MongoDbStore = require('connect-mongodb-session')(session);
+const mongoSanitize = require('express-mongo-sanitize');
 
 // Local Modules
 const rootDir = require('./util/path-util');
@@ -35,6 +36,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Strip $ / . operators from request payloads to block NoSQL injection.
+app.use(mongoSanitize());
 
 app.use(
   session({
