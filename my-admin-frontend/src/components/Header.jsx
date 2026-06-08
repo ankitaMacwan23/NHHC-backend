@@ -33,6 +33,7 @@ const Header = ({ onLogout }) => {
       <nav className="flex flex-wrap items-center space-x-4 text-sm font-medium">
         <Link to="/home" className="hover:text-gray-200 transition">Home</Link>
         <Link to="/patients" className="hover:text-gray-200 transition">Patients</Link>
+        <Link to="/payments-done" className="hover:text-gray-200 transition">Payments</Link>
         <Link to="/caregivers" className="hover:text-gray-200 transition">Care Givers</Link>
         <Link to="/services" className="hover:text-gray-200 transition">Services</Link>
         <Link to="/blogs" className="hover:text-gray-200 transition">Blogs</Link>

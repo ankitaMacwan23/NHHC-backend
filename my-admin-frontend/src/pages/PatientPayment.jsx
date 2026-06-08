@@ -39,14 +39,24 @@ const PatientPayment = () => {
     setTotal(totalAmount);
   };
 
+  const [emailing, setEmailing] = useState(false);
+
+  const buildChargePayload = () =>
+    caregivers.map((item, idx) => ({
+      _id: item._id,
+      amount: charges[idx] || 0,
+    }));
+
   const handleGenerateBill = async () => {
+    const confirmed = window.confirm(
+      "Is this bill final?\n\nProceeding will save the charges, mark the patient as Payment Done, and download the invoice. This cannot be undone."
+    );
+    if (!confirmed) return;
+
     const grandTotal = total + Number(extraCharges) - Number(discount);
     setFinalTotal(grandTotal);
 
-    const payload = caregivers.map((item, idx) => ({
-      _id: item._id,
-      amount: charges[idx] || 0
-    }));
+    const payload = buildChargePayload();
 
     try {
       const response = await axios.post(
@@ -75,6 +85,34 @@ const PatientPayment = () => {
     } catch (err) {
       console.error(err);
       alert("Failed to generate bill");
+    }
+  };
+
+  const handleEmailBill = async () => {
+    if (!patient?.patientEmail) {
+      alert("This patient has no email address on file.");
+      return;
+    }
+    const grandTotal = total + Number(extraCharges) - Number(discount);
+    const ok = window.confirm(`Send this invoice to ${patient.patientEmail}?`);
+    if (!ok) return;
+
+    try {
+      setEmailing(true);
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/patient/email-invoice`, {
+        id: patientId,
+        charges: buildChargePayload(),
+        total,
+        discount,
+        extraCharges,
+        finalTotal: grandTotal,
+      });
+      alert(res.data?.message || "Invoice emailed to patient.");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to email the invoice.");
+    } finally {
+      setEmailing(false);
     }
   };
 
@@ -170,6 +208,19 @@ const PatientPayment = () => {
             className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 w-full"
           >
             Generate & Download Bill
+          </button>
+
+          <button
+            onClick={handleEmailBill}
+            disabled={emailing || !patient?.patientEmail}
+            title={!patient?.patientEmail ? "This patient has no email address on file" : "Email the invoice to the patient"}
+            className="mt-3 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 w-full disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {emailing
+              ? "Sending…"
+              : patient?.patientEmail
+              ? `Email Bill to ${patient.patientEmail}`
+              : "Email Bill (no email on file)"}
           </button>
 
           {finalTotal !== null && (

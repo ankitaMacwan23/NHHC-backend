@@ -44,6 +44,13 @@ const patientToCaregiverSchema = new mongoose.Schema({
     enum: ['pending', 'done'],
     default: 'pending',
   },
+  // Flat per-assignment charge captured at payment time (used by invoices and the
+  // Payments-Done report). Previously written by the controller but dropped because
+  // it was not declared here.
+  charge: {
+    type: Number,
+    default: 0,
+  },
   charges: [
     {
       charge: {

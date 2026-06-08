@@ -7,6 +7,66 @@ const PatientToCaregiver = require("../models/patientToCaregiver");
 const generateInvoice = require('../util/generateInvoice');
 const PDFDocument = require('pdfkit');
 const { Readable } = require('stream');
+const { sendMail } = require('../services/email');
+
+// ----------------------------------------------------------------------------
+// Invoice helpers (shared by download + email)
+// ----------------------------------------------------------------------------
+
+// Turn the `charges` payload ([{ _id, amount }]) into labelled line items by
+// resolving each assignment's caregiver name/role.
+const resolveInvoiceLineItems = async (charges = []) => {
+  const items = [];
+  for (const entry of charges) {
+    let label = `Service ${entry._id}`;
+    try {
+      const asg = await PatientToCaregiver.findById(entry._id).populate('caregiverId', 'name');
+      if (asg) {
+        const name = asg.caregiverId ? asg.caregiverId.name : 'Caregiver';
+        label = `${name} (${asg.caregiverRole})`;
+      }
+    } catch (_) {
+      // fall back to the generic label
+    }
+    items.push({ label, amount: Number(entry.amount) || 0 });
+  }
+  return items;
+};
+
+// Build the invoice PDF in-memory and resolve to a Buffer.
+const buildInvoicePdfBuffer = ({ patient, lineItems = [], total = 0, discount = 0, extraCharges = 0, finalTotal = 0 }) =>
+  new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks = [];
+    doc.on('data', (c) => chunks.push(c));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    doc.fontSize(20).text('Naysan Home Health Care', { align: 'center' });
+    doc.fontSize(14).text('Patient Invoice', { align: 'center' }).moveDown();
+
+    doc.fontSize(12)
+      .text(`Patient Name: ${patient?.patientName || '-'}`)
+      .text(`Patient ID: ${patient?._id || '-'}`)
+      .text(`Contact: ${patient?.patientContact || '-'}`)
+      .moveDown();
+
+    doc.fontSize(13).text('Breakdown:', { underline: true }).moveDown(0.5);
+    lineItems.forEach((item, index) => {
+      doc.fontSize(12).text(`${index + 1}. ${item.label} — ₹${item.amount}`);
+    });
+
+    doc.moveDown()
+      .fontSize(12)
+      .text(`Subtotal: ₹${total}`)
+      .text(`Discount: ₹${discount}`)
+      .text(`Extra Charges: ₹${extraCharges}`)
+      .text(`Final Total: ₹${finalTotal}`)
+      .moveDown();
+
+    doc.fontSize(10).text('Thank you for choosing Naysan Home Health Care!', { align: 'center' });
+    doc.end();
+  });
 
 //--------------------for admin site functions--------------------------------------
 
@@ -77,41 +137,98 @@ exports.submitPatientPayment = async (req, res) => {
       });
     }
 
-    await Patient.findByIdAndUpdate(id, { status: 'PaymentDone' });
+    const patient = await Patient.findByIdAndUpdate(id, { status: 'PaymentDone' }, { new: true });
 
-    // Create a PDF
-    const doc = new PDFDocument();
-    const chunks = [];
+    // Build the invoice and stream it back for download.
+    const lineItems = await resolveInvoiceLineItems(charges);
+    const pdfBuffer = await buildInvoicePdfBuffer({ patient, lineItems, total, discount, extraCharges, finalTotal });
 
-    doc.on('data', (chunk) => chunks.push(chunk));
-    doc.on('end', () => {
-      const pdfBuffer = Buffer.concat(chunks);
-
-      res.set({
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename=invoice.pdf',
-        'Content-Length': pdfBuffer.length,
-      });
-
-      res.send(pdfBuffer);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=invoice_${patient?.patientName || 'patient'}.pdf`,
+      'Content-Length': pdfBuffer.length,
     });
-
-    // PDF Content
-    doc.fontSize(18).text('Patient Invoice', { align: 'center' }).moveDown();
-    doc.fontSize(12).text(`Total: ₹${total}`);
-    doc.text(`Discount: ₹${discount}`);
-    doc.text(`Extra Charges: ₹${extraCharges}`);
-    doc.text(`Final Total: ₹${finalTotal}`).moveDown();
-
-    doc.text('Breakdown:', { underline: true });
-    charges.forEach((item, index) => {
-      doc.text(`${index + 1}. Service ID: ${item._id} - ₹${item.amount}`);
-    });
-
-    doc.end();
+    res.send(pdfBuffer);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to submit payment' });
+  }
+};
+
+// Email the generated invoice to the patient's email (if one is on file).
+exports.emailInvoice = async (req, res) => {
+  try {
+    const { id, charges, total, discount, extraCharges, finalTotal } = req.body;
+
+    const patient = await Patient.findById(id);
+    if (!patient) {
+      return res.status(404).json({ success: false, message: 'Patient not found.' });
+    }
+    if (!patient.patientEmail) {
+      return res.status(400).json({ success: false, message: 'This patient has no email address on file.' });
+    }
+
+    const lineItems = await resolveInvoiceLineItems(charges || []);
+    const pdfBuffer = await buildInvoicePdfBuffer({ patient, lineItems, total, discount, extraCharges, finalTotal });
+
+    const result = await sendMail({
+      to: patient.patientEmail,
+      subject: 'Your Naysan Home Health Care Invoice',
+      text: `Dear ${patient.patientName},\n\nPlease find your invoice attached. Final amount payable: ₹${finalTotal}.\n\nThank you for choosing Naysan Home Health Care.`,
+      attachments: [
+        { filename: `invoice_${patient.patientName}.pdf`, content: pdfBuffer, contentType: 'application/pdf' },
+      ],
+    });
+
+    return res.json({
+      success: true,
+      delivered: result.delivered,
+      message: result.delivered
+        ? `Invoice emailed to ${patient.patientEmail}.`
+        : `Email is in dev mode — set EMAIL_* env vars to deliver for real. (Would send to ${patient.patientEmail}.)`,
+    });
+  } catch (err) {
+    console.error('emailInvoice error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to email the invoice.' });
+  }
+};
+
+// Admin: list every patient whose payment is done, with their caregivers + charges.
+exports.getPaymentDonePatients = async (req, res) => {
+  try {
+    const patients = await Patient.find({ status: 'PaymentDone' });
+
+    const result = [];
+    for (const p of patients) {
+      const assignments = await PatientToCaregiver.find({ patientId: p._id })
+        .populate('caregiverId', 'name contact role');
+
+      result.push({
+        _id: p._id,
+        patientName: p.patientName,
+        patientGender: p.patientGender,
+        patientAge: p.patientAge,
+        patientContact: p.patientContact,
+        patientEmail: p.patientEmail || '',
+        patientAddress: p.patientAddress,
+        status: p.status,
+        caregivers: assignments.map((a) => ({
+          name: a.caregiverId ? a.caregiverId.name : '-',
+          contact: a.caregiverId ? a.caregiverId.contact : '-',
+          role: a.caregiverRole,
+          date: a.date,
+          duty: a.duty,
+          charge: a.charge || 0,
+          serviceStatus: a.status,
+        })),
+        totalCharge: assignments.reduce((sum, a) => sum + (a.charge || 0), 0),
+      });
+    }
+
+    res.status(200).json({ patients: result });
+  } catch (err) {
+    console.error('Error fetching payment-done patients:', err);
+    res.status(500).json({ error: 'Failed to fetch payment-done patients' });
   }
 };
 
@@ -295,6 +412,9 @@ exports.getAssignedPatientToCareGiver = async (req, res) => {
       caregiverId,
       caregiverRole: role,
       status: 'service_pending',
+      // Once the patient has paid for an assignment it is closed out — drop it
+      // from the caregiver's pending list so it never shows again.
+      payment_from_patient: { $ne: 'done' },
       date: { $gte: new Date() },
     }).populate('patientId');
 

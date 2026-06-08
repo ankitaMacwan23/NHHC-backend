@@ -13,6 +13,7 @@ import Testimonials from './pages/Testimonials';
 import Accounts from './pages/Accounts';
 import PatientDetails from './components/PatientDetails';
 import PatientPayment from './pages/PatientPayment';
+import PaymentsDone from './pages/PaymentsDone';
 import ProtectedRoute from "./components/ProtectedRoute";
 import axios from 'axios';
 
@@ -57,6 +58,7 @@ const AppContent = () => {
             <Route path="/accounts" element={<Accounts />} />
             <Route path="/patient/details" element={<PatientDetails />} />
             <Route path="/patient/payment" element={<PatientPayment />} />
+            <Route path="/payments-done" element={<PaymentsDone />} />
           </Route>
         </Routes>
       </main>
