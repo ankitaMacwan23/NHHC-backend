@@ -1,9 +1,31 @@
 const { check, validationResult } = require('express-validator');
 const Patient = require('./../models/patient');
 const Caregivers = require('./../models/careGiver');
+const { sendSms } = require('../services/sms');
 
 
 const cloudinary = require("cloudinary").v2;
+
+// Builds the approval/rejection message sent to a caregiver after an admin
+// decision. Centralised so the wording stays consistent across endpoints.
+const caregiverStatusMessage = (status, name) => {
+  const hi = name ? `Hi ${name}, ` : '';
+  if (status === 'Approved') {
+    return `${hi}congratulations! Your Naysan Home Health Care caregiver registration has been approved. You can now log in to the app.`;
+  }
+  return `${hi}we're sorry to inform you that your Naysan Home Health Care caregiver registration has been rejected. Please contact support for details.`;
+};
+
+// Best-effort notification to a caregiver about an approve/reject decision.
+// Never throws — a failed SMS must not fail the admin action.
+const notifyCaregiverStatus = async (caregiver, status) => {
+  try {
+    if (!caregiver || !caregiver.contact) return;
+    await sendSms(caregiver.contact, caregiverStatusMessage(status, caregiver.name));
+  } catch (err) {
+    console.error('Failed to send caregiver status notification:', err.message || err);
+  }
+};
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -34,7 +56,18 @@ exports.updateCaregiverStatus = async (req, res) => {
       return res.status(400).json({ message: "Invalid input data" });
     }
 
-    await Caregivers.findByIdAndUpdate(caregiverId, { status });
+    const caregiver = await Caregivers.findByIdAndUpdate(
+      caregiverId,
+      { status },
+      { new: true }
+    );
+
+    if (!caregiver) {
+      return res.status(404).json({ message: "Caregiver not found" });
+    }
+
+    // Notify the caregiver of the decision (non-blocking, best-effort).
+    await notifyCaregiverStatus(caregiver, status);
 
     res.status(200).json({ message: `Caregiver status updated to ${status}` });
   } catch (error) {
@@ -46,7 +79,18 @@ exports.updateCaregiverStatus = async (req, res) => {
 exports.rejectCaregiver = async (req, res) => {
   try {
     const { caregiverId } = req.body;
-    await Caregivers.findByIdAndUpdate(caregiverId, { status: "Rejected" });
+    const caregiver = await Caregivers.findByIdAndUpdate(
+      caregiverId,
+      { status: "Rejected" },
+      { new: true }
+    );
+
+    if (!caregiver) {
+      return res.status(404).json({ error: "Caregiver not found" });
+    }
+
+    await notifyCaregiverStatus(caregiver, "Rejected");
+
     res.status(200).json({ message: "Caregiver rejected" });
   } catch (err) {
     console.error("Error rejecting caregiver:", err);
@@ -86,13 +130,12 @@ exports.postAddCareGiver = async (req, res) => {
       caregiver_role,
     } = req.body;
 
-    // Basic validation
+    // Basic validation — email is OPTIONAL, everything else required.
     if (
       !caregiver_name ||
       !caregiver_gender ||
       !caregiver_dob ||
       !caregiver_contact ||
-      !caregiver_email ||
       !caregiver_address ||
       !caregiver_role
     ) {
@@ -102,20 +145,25 @@ exports.postAddCareGiver = async (req, res) => {
       });
     }
 
-    const phoneRegex = /^\d{10}$/;
+    const phoneRegex = /^[6-9]\d{9}$/;
     if (!phoneRegex.test(caregiver_contact)) {
       return res.status(400).json({
         success: false,
-        message: "Contact number must be a 10-digit number",
+        message: "Enter a valid 10-digit mobile number.",
       });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(caregiver_email)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid email address",
-      });
+    // Email optional — validate the format only when one is supplied.
+    const normalizedEmail =
+      caregiver_email && caregiver_email.trim() ? caregiver_email.trim() : undefined;
+    if (normalizedEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(normalizedEmail)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid email address",
+        });
+      }
     }
 
     // 🔹 Files from Multer
@@ -125,6 +173,14 @@ exports.postAddCareGiver = async (req, res) => {
       req.files &&
       req.files.certificate_document &&
       req.files.certificate_document[0];
+
+    // Documents are MANDATORY.
+    if (!aadharFile || !certificateFile) {
+      return res.status(400).json({
+        success: false,
+        message: "Aadhar card and certificate documents are both required.",
+      });
+    }
 
     let aadharUrl = null;
     let certificateUrl = null;
@@ -148,7 +204,7 @@ exports.postAddCareGiver = async (req, res) => {
       gender: caregiver_gender,
       dob: caregiver_dob,
       contact: caregiver_contact,
-      email: caregiver_email,
+      email: normalizedEmail,
       address: caregiver_address,
       role: caregiver_role,
       aadhar_document: aadharUrl,

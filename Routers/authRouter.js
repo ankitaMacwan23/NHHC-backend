@@ -30,6 +30,8 @@ const otpVerifyLimiter = rateLimit({
 // New token-based, server-authoritative OTP flow.
 authRouter.post('/otp/request', otpRequestLimiter, otpAuth.requestOtp);
 authRouter.post('/otp/verify', otpVerifyLimiter, otpAuth.verifyOtp);
+// Verify an OTP during NEW patient/caregiver registration (no token issued).
+authRouter.post('/otp/verify-registration', otpVerifyLimiter, otpAuth.verifyRegistrationOtp);
 authRouter.post('/refresh', otpAuth.refresh);
 authRouter.post('/logout', otpAuth.logout);
 authRouter.post('/logout-all', requireAuth, otpAuth.logoutAll);

@@ -5,7 +5,7 @@ const patientSchema = new mongoose.Schema({
   patientGender: { type: String, required: true },
   patientAge: { type: String, required: true },
   patientContact: { type: String, required: true },
-  patientEmail: { type: String, required: true },
+  patientEmail: { type: String }, // optional
   patientAddress: { type: String, required: true },
   document: { type: String, default: null },
   medicationPhotoUrl: {},

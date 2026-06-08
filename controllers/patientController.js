@@ -244,12 +244,24 @@ exports.postAddPatient = async (req, res) => {
 
     const documentUrl = req.file ? req.file.path : null; // <-- Cloudinary URL
 
+    // Document upload is MANDATORY.
+    if (!documentUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "A document upload is required.",
+      });
+    }
+
+    // Email is OPTIONAL — store undefined (not "") when not provided.
+    const normalizedEmail =
+      patientEmail && patientEmail.trim() ? patientEmail.trim() : undefined;
+
     const newPatient = new Patient({
       patientName,
       patientGender,
       patientAge,
       patientContact,
-      patientEmail,
+      patientEmail: normalizedEmail,
       patientAddress,
       document: documentUrl,
     });

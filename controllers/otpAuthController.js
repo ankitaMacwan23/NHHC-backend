@@ -130,6 +130,47 @@ exports.verifyOtp = async (req, res) => {
 };
 
 // ----------------------------------------------------------------------------
+// POST /auth/otp/verify-registration   { phone, otp }
+// Verifies an OTP for a NEW registration (patient or caregiver sign-up) WITHOUT
+// issuing tokens or creating/looking up any account. The client uses the success
+// response as a green light to actually submit the registration form.
+// ----------------------------------------------------------------------------
+exports.verifyRegistrationOtp = async (req, res) => {
+  try {
+    const phone = (req.body.phone || '').trim();
+    const otp = (req.body.otp || '').trim();
+
+    if (!isValidPhone(phone) || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ message: 'Invalid phone or code.' });
+    }
+
+    const record = await Otp.findOne({ phone });
+    if (!record || record.expiresAt.getTime() < Date.now()) {
+      return res.status(400).json({ message: 'Code expired. Please request a new one.', code: 'OTP_EXPIRED' });
+    }
+    if (record.attempts >= OTP_MAX_ATTEMPTS) {
+      return res.status(429).json({ message: 'Too many incorrect attempts. Request a new code.', code: 'OTP_LOCKED' });
+    }
+
+    const ok = await bcrypt.compare(otp, record.hash);
+    if (!ok) {
+      record.attempts += 1;
+      await record.save();
+      const left = OTP_MAX_ATTEMPTS - record.attempts;
+      return res.status(400).json({ message: `Incorrect code.${left > 0 ? ` ${left} attempt(s) left.` : ''}`, code: 'OTP_INVALID' });
+    }
+
+    // Code is correct — consume it so it can't be replayed.
+    await Otp.deleteOne({ _id: record._id });
+
+    return res.json({ success: true, message: 'Phone number verified.' });
+  } catch (err) {
+    console.error('verifyRegistrationOtp error:', err);
+    return res.status(500).json({ message: 'Verification failed. Please try again.' });
+  }
+};
+
+// ----------------------------------------------------------------------------
 // POST /auth/refresh   { refreshToken }
 // Rotates the refresh token and returns a fresh access token. Reuse of a
 // revoked/expired token fails with 401 (client then routes to login).

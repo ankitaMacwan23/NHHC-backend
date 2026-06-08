@@ -116,7 +116,11 @@ const CareGivers = () => {
                       </button>
                       <button
                         className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-                        onClick={() => handleUpdateStatus(caregiver._id, "Rejected")}
+                        onClick={() => {
+                          if (window.confirm("Are you sure you want to delete this record?")) {
+                            handleUpdateStatus(caregiver._id, "Rejected");
+                          }
+                        }}
                       >
                         Delete
                       </button>
@@ -151,13 +155,21 @@ const CareGivers = () => {
                 <p className="text-sm text-gray-700 mt-2 font-medium">Status: {caregiver.status}</p>
                 <div className="mt-4 flex justify-between">
                   <button
-                    onClick={() => handleUpdateStatus(caregiver._id, "Approved")}
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to approve this caregiver?")) {
+                        handleUpdateStatus(caregiver._id, "Approved");
+                      }
+                    }}
                     className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded"
                   >
                     Approve
                   </button>
                   <button
-                    onClick={() => handleUpdateStatus(caregiver._id, "Rejected")}
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to reject this caregiver?")) {
+                        handleUpdateStatus(caregiver._id, "Rejected");
+                      }
+                    }}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
                   >
                     Reject
