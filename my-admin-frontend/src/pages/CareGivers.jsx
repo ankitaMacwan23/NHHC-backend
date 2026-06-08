@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const CareGivers = () => {
+  const navigate = useNavigate();
   const [pendingCaregivers, setPendingCaregivers] = useState([]);
   const [approvedGrouped, setApprovedGrouped] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -108,6 +110,12 @@ const CareGivers = () => {
                     <td className="py-2 px-4 border-b">{caregiver.email}</td>
                     <td className="py-2 px-4 border-b">{caregiver.address}</td>
                     <td className="py-2 px-4 border-b text-center space-x-2">
+                      <button
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                        onClick={() => navigate(`/caregivers/${caregiver._id}/work`)}
+                      >
+                        View Work
+                      </button>
                       <button
                         className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
                         onClick={() => handleAddToFavourite(caregiver._id)}

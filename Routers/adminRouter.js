@@ -11,6 +11,7 @@ const adminRouter = express.Router();
 // for admin site API's
 adminRouter.get("/patients",adminController.getAllPatients);
 adminRouter.get("/caregivers",adminController.getAllCareGivers);
+adminRouter.get("/stats",adminController.getStats);
 
 // for frontend(App) site API's
 

@@ -18,6 +18,7 @@ patientRouter.post("/reject-patient/:patientId", patientController.rejectPatient
 patientRouter.post('/submit-payment', patientController.submitPatientPayment);
 patientRouter.post('/email-invoice', patientController.emailInvoice);
 patientRouter.get('/payment-done', patientController.getPaymentDonePatients);
+patientRouter.get('/history', patientController.getPatientHistory);
 patientRouter.post("/assigned-caregivers", patientController.getAssignedCaregivers);
 patientRouter.post("/assign-caregiver", patientController.postAssignCaregiver);
 

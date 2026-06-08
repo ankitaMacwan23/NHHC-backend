@@ -237,8 +237,21 @@ exports.logoutAll = async (req, res) => {
 };
 
 // GET /auth/me   (requireAuth) — current principal (used to confirm session).
+// For caregivers we return the full profile so a restored session can render the
+// caregiver dashboard (name/contact/role) without an extra round-trip.
 exports.me = async (req, res) => {
-  return res.json({ user: { id: req.user.sub, kind: req.user.kind, phone: req.user.phone, role: req.user.role } });
+  try {
+    if (req.user.kind === 'caregiver') {
+      const caregiver = await Caregivers.findById(req.user.sub);
+      if (caregiver) {
+        return res.json({ user: { kind: 'caregiver', ...ownCaregiverProfile(caregiver) } });
+      }
+    }
+    return res.json({ user: { id: req.user.sub, kind: req.user.kind, phone: req.user.phone, role: req.user.role } });
+  } catch (err) {
+    console.error('me error:', err);
+    return res.json({ user: { id: req.user.sub, kind: req.user.kind, phone: req.user.phone, role: req.user.role } });
+  }
 };
 
 // --- helper: persist a refresh token and return the token pair --------------

@@ -35,6 +35,7 @@ const Header = ({ onLogout }) => {
         <Link to="/patients" className="hover:text-gray-200 transition">Patients</Link>
         <Link to="/payments-done" className="hover:text-gray-200 transition">Payments</Link>
         <Link to="/caregivers" className="hover:text-gray-200 transition">Care Givers</Link>
+        <Link to="/inquiries" className="hover:text-gray-200 transition">Inquiries</Link>
         <Link to="/services" className="hover:text-gray-200 transition">Services</Link>
         <Link to="/blogs" className="hover:text-gray-200 transition">Blogs</Link>
         <Link to="/testimonials" className="hover:text-gray-200 transition">Testimonials</Link>

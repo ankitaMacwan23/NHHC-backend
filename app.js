@@ -20,6 +20,7 @@ const { patientRouter } = require('./Routers/patientRouter');
 const adminRouter = require('./Routers/adminRouter');
 const careGiverRouter = require('./Routers/careGiverRouter');
 const authRouter = require('./Routers/authRouter');
+const inquiryRouter = require('./Routers/inquiryRouter');
 const errorController = require('./controllers/errorController');
 
 // Environment Config
@@ -81,6 +82,7 @@ app.use(storeRouter);
 app.use('/patient', patientRouter);
 app.use('/admin', adminRouter);
 app.use('/caregiver', careGiverRouter);
+app.use('/inquiry', inquiryRouter);
 
 // Serve Frontend (Vite/React) - only if dist folder exists
 const distPath = path.join(__dirname, 'dist');

@@ -14,6 +14,8 @@ import Accounts from './pages/Accounts';
 import PatientDetails from './components/PatientDetails';
 import PatientPayment from './pages/PatientPayment';
 import PaymentsDone from './pages/PaymentsDone';
+import Inquiries from './pages/Inquiries';
+import CaregiverWork from './pages/CaregiverWork';
 import ProtectedRoute from "./components/ProtectedRoute";
 import axios from 'axios';
 
@@ -59,6 +61,8 @@ const AppContent = () => {
             <Route path="/patient/details" element={<PatientDetails />} />
             <Route path="/patient/payment" element={<PatientPayment />} />
             <Route path="/payments-done" element={<PaymentsDone />} />
+            <Route path="/inquiries" element={<Inquiries />} />
+            <Route path="/caregivers/:id/work" element={<CaregiverWork />} />
           </Route>
         </Routes>
       </main>

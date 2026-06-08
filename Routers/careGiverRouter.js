@@ -21,5 +21,6 @@ careGiverRouter.post(
 
 careGiverRouter.post("/approved-caregivers-grouped", careGiverController.getApprovedCaregiversGrouped);
 careGiverRouter.get("/caregivers-by-role/:role", careGiverController.getCaregiversByRole);
+careGiverRouter.get("/work/:id", careGiverController.getCaregiverWork);
 
 module.exports = careGiverRouter;

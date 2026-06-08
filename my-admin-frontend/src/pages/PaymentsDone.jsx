@@ -47,6 +47,29 @@ const PaymentsDone = () => {
                 </span>
               </div>
 
+              {/* Payment breakdown: base / discount / extra / final */}
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="bg-gray-50 rounded-lg p-3 text-center border">
+                  <p className="text-xs text-gray-500">Base Amount</p>
+                  <p className="text-lg font-bold text-gray-800">₹{p.baseAmount}</p>
+                </div>
+                <div className="bg-amber-50 rounded-lg p-3 text-center border">
+                  <p className="text-xs text-gray-500">Discount</p>
+                  <p className="text-lg font-bold text-amber-700">₹{p.discount}</p>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3 text-center border">
+                  <p className="text-xs text-gray-500">Extra Charges</p>
+                  <p className="text-lg font-bold text-blue-700">₹{p.extraCharges}</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-3 text-center border">
+                  <p className="text-xs text-gray-500">Final Total</p>
+                  <p className="text-lg font-bold text-green-700">₹{p.finalTotal}</p>
+                </div>
+              </div>
+              {p.paidAt && (
+                <p className="text-xs text-gray-400 mt-2">Paid on {new Date(p.paidAt).toLocaleString()}</p>
+              )}
+
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full text-sm border border-gray-200 rounded-lg">
                   <thead>

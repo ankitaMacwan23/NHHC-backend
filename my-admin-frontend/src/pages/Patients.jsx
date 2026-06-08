@@ -7,6 +7,8 @@ const Patients = () => {
 
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const fetchPatients = async () => {
     try {
@@ -103,14 +105,48 @@ const Patients = () => {
     return <div className="mt-3">{buttons}</div>;
   };
 
+  const visiblePatients = patients
+    .filter((p) => (statusFilter === 'All' ? true : p.status === statusFilter))
+    .filter((p) => {
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        (p.patientName || '').toLowerCase().includes(q) ||
+        (p.patientContact || '').includes(q) ||
+        (p.patientEmail || '').toLowerCase().includes(q)
+      );
+    });
+
   return (
     <div className="p-4 sm:p-8">
       <h2 className="text-2xl font-bold text-blue-700 text-center mb-4">Patients List</h2>
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-5 max-w-3xl mx-auto">
+        <input
+          type="text"
+          placeholder="Search by name, contact or email…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2 flex-1"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2"
+        >
+          <option value="All">All statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+        </select>
+      </div>
+
       {loading ? (
         <p className="text-center text-gray-500">Loading...</p>
+      ) : visiblePatients.length === 0 ? (
+        <p className="text-center text-gray-500">No patients found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {patients.map((patient) => (
+          {visiblePatients.map((patient) => (
             <div
               key={patient._id}
               className="bg-white rounded-xl shadow-md p-4 border hover:shadow-lg transition-all"

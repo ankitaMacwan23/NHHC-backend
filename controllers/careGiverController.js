@@ -256,10 +256,65 @@ exports.getApprovedCaregiversGrouped = async (req, res) => {
   }
 };
 
+// Admin: individual caregiver work / performance details.
+// GET /caregiver/work/:id
+exports.getCaregiverWork = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const caregiver = await Caregivers.findById(id);
+    if (!caregiver) {
+      return res.status(404).json({ error: 'Caregiver not found' });
+    }
+
+    const PatientToCaregiver = require('../models/patientToCaregiver');
+    const assignments = await PatientToCaregiver.find({ caregiverId: id })
+      .populate('patientId', 'patientName patientContact patientAddress')
+      .sort({ date: -1 });
+
+    const completed = assignments.filter((a) => a.status === 'service_completed');
+    const pending = assignments.filter((a) => a.status === 'service_pending');
+
+    const records = assignments.map((a) => ({
+      patientName: a.patientId ? a.patientId.patientName : '-',
+      patientContact: a.patientId ? a.patientId.patientContact : '-',
+      address: a.patientId ? a.patientId.patientAddress : '-',
+      role: a.caregiverRole,
+      date: a.date,
+      duty: a.duty,
+      serviceStatus: a.status,
+      paymentToCaregiver: a.payment_to_caregiver,
+      charge: a.charge || 0,
+    }));
+
+    return res.status(200).json({
+      caregiver: {
+        _id: caregiver._id,
+        name: caregiver.name,
+        role: caregiver.role,
+        contact: caregiver.contact,
+        email: caregiver.email,
+        gender: caregiver.gender,
+        status: caregiver.status,
+      },
+      summary: {
+        totalAssignments: assignments.length,
+        completedVisits: completed.length,
+        pendingVisits: pending.length,
+        uniquePatients: new Set(assignments.map((a) => String(a.patientId?._id || a.patientId))).size,
+        totalEarnings: completed.reduce((sum, a) => sum + (a.charge || 0), 0),
+      },
+      records,
+    });
+  } catch (err) {
+    console.error('getCaregiverWork error:', err);
+    return res.status(500).json({ error: 'Failed to fetch caregiver work details' });
+  }
+};
+
 exports.getCaregiversByRole = async (req, res) => {
   try {
     const { role } = req.params;
-    const caregivers = await Caregivers.find({ role, status: "Approved" });
+    const caregivers = await Caregivers.find({ role, status: "Approved" }).sort({ _id: -1 });
     res.status(200).json({ caregivers });
   } catch (err) {
     console.error("Error fetching caregivers:", err);

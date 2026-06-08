@@ -13,8 +13,16 @@ const patientSchema = new mongoose.Schema({
     type: String,
     enum: ['Pending', 'Approved', 'Rejected', 'PaymentDone'],
     default: 'Pending'
-  }
-});
+  },
+  // Snapshot of the final payment breakdown, saved when the admin generates the bill.
+  paymentSummary: {
+    baseAmount: { type: Number, default: 0 },
+    discount: { type: Number, default: 0 },
+    extraCharges: { type: Number, default: 0 },
+    finalTotal: { type: Number, default: 0 },
+    paidAt: { type: Date },
+  },
+}, { timestamps: true });
 
 
 // Add geospatial index

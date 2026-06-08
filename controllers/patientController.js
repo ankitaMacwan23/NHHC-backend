@@ -98,7 +98,7 @@ exports.postPaymentInfo = async (req, res) => {
     const caregivers = await PatientToCaregiver.find({
       patientId,
       payment_from_patient: "pending"
-    }).populate("caregiverId");
+    }).populate("caregiverId").sort({ _id: -1 });
 
     const result = caregivers.map(entry => ({
       ...entry._doc,
@@ -137,7 +137,20 @@ exports.submitPatientPayment = async (req, res) => {
       });
     }
 
-    const patient = await Patient.findByIdAndUpdate(id, { status: 'PaymentDone' }, { new: true });
+    const patient = await Patient.findByIdAndUpdate(
+      id,
+      {
+        status: 'PaymentDone',
+        paymentSummary: {
+          baseAmount: Number(total) || 0,
+          discount: Number(discount) || 0,
+          extraCharges: Number(extraCharges) || 0,
+          finalTotal: Number(finalTotal) || 0,
+          paidAt: new Date(),
+        },
+      },
+      { new: true }
+    );
 
     // Build the invoice and stream it back for download.
     const lineItems = await resolveInvoiceLineItems(charges);
@@ -196,13 +209,15 @@ exports.emailInvoice = async (req, res) => {
 // Admin: list every patient whose payment is done, with their caregivers + charges.
 exports.getPaymentDonePatients = async (req, res) => {
   try {
-    const patients = await Patient.find({ status: 'PaymentDone' });
+    const patients = await Patient.find({ status: 'PaymentDone' }).sort({ _id: -1 });
 
     const result = [];
     for (const p of patients) {
       const assignments = await PatientToCaregiver.find({ patientId: p._id })
-        .populate('caregiverId', 'name contact role');
+        .populate('caregiverId', 'name contact role')
+        .sort({ _id: -1 });
 
+      const summary = p.paymentSummary || {};
       result.push({
         _id: p._id,
         patientName: p.patientName,
@@ -212,6 +227,12 @@ exports.getPaymentDonePatients = async (req, res) => {
         patientEmail: p.patientEmail || '',
         patientAddress: p.patientAddress,
         status: p.status,
+        // Full breakdown so the report can show base / discount / extra / final.
+        baseAmount: summary.baseAmount || 0,
+        discount: summary.discount || 0,
+        extraCharges: summary.extraCharges || 0,
+        finalTotal: summary.finalTotal || 0,
+        paidAt: summary.paidAt || null,
         caregivers: assignments.map((a) => ({
           name: a.caregiverId ? a.caregiverId.name : '-',
           contact: a.caregiverId ? a.caregiverId.contact : '-',
@@ -232,6 +253,69 @@ exports.getPaymentDonePatients = async (req, res) => {
   }
 };
 
+// --------------------------------------------------------------------------
+// Patient home-health-care history, looked up by mobile number.
+// GET /patient/history?mobile=XXXXXXXXXX
+// Returns every service request for that number with its caregivers, visits,
+// payment breakdown, status and document — for a timeline view in the app.
+// --------------------------------------------------------------------------
+exports.getPatientHistory = async (req, res) => {
+  try {
+    const mobile = (req.query.mobile || req.body.mobile || '').toString().trim();
+    if (!/^[0-9]{10}$/.test(mobile)) {
+      return res.status(400).json({ success: false, message: 'Enter a valid 10-digit mobile number.' });
+    }
+
+    const patients = await Patient.find({ patientContact: mobile }).sort({ _id: -1 });
+    if (!patients.length) {
+      return res.status(200).json({ success: true, mobile, records: [], message: 'No history found for this number.' });
+    }
+
+    const records = [];
+    for (const p of patients) {
+      const assignments = await PatientToCaregiver.find({ patientId: p._id })
+        .populate('caregiverId', 'name contact role')
+        .sort({ date: -1 });
+
+      const summary = p.paymentSummary || {};
+      records.push({
+        patientId: p._id,
+        patientName: p.patientName,
+        gender: p.patientGender,
+        age: p.patientAge,
+        contact: p.patientContact,
+        email: p.patientEmail || '',
+        address: p.patientAddress,
+        status: p.status,
+        document: p.document || null,
+        createdAt: p.createdAt || null,
+        payment: {
+          baseAmount: summary.baseAmount || 0,
+          discount: summary.discount || 0,
+          extraCharges: summary.extraCharges || 0,
+          finalTotal: summary.finalTotal || 0,
+          paidAt: summary.paidAt || null,
+          done: p.status === 'PaymentDone',
+        },
+        visits: assignments.map((a) => ({
+          caregiverName: a.caregiverId ? a.caregiverId.name : '-',
+          caregiverContact: a.caregiverId ? a.caregiverId.contact : '-',
+          role: a.caregiverRole,
+          date: a.date,
+          duty: a.duty,
+          serviceStatus: a.status, // service_pending | service_completed
+          charge: a.charge || 0,
+        })),
+      });
+    }
+
+    return res.status(200).json({ success: true, mobile, records });
+  } catch (err) {
+    console.error('getPatientHistory error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to fetch history.' });
+  }
+};
+
 //get alreday assigned caregivers to patient in patient-detail page
 exports.getAssignedCaregivers = async (req, res) => {
   try {
@@ -243,7 +327,8 @@ exports.getAssignedCaregivers = async (req, res) => {
 
     const assignments = await PatientToCaregiver.find({ patientId })
       .populate('caregiverId', 'name contact') // Only get name and contact
-      .select('caregiverId duty date status');
+      .select('caregiverId duty date status')
+      .sort({ date: -1 });
 
     const formatted = assignments.map((a) => ({
       caregiverName: a.caregiverId.name,
@@ -416,7 +501,7 @@ exports.getAssignedPatientToCareGiver = async (req, res) => {
       // from the caregiver's pending list so it never shows again.
       payment_from_patient: { $ne: 'done' },
       date: { $gte: new Date() },
-    }).populate('patientId');
+    }).populate('patientId').sort({ date: -1 });
 
     const tasks = assignedTasks.map((item) => {
       const patient = item.patientId;
@@ -451,7 +536,7 @@ exports.getCompletedAssignedPatients = async (req, res) => {
       caregiverId,
       caregiverRole: role,
       status: 'service_completed',
-    }).populate('patientId');
+    }).populate('patientId').sort({ date: -1 });
 
     const tasks = assignedTasks.map((item) => {
       const patient = item.patientId;
